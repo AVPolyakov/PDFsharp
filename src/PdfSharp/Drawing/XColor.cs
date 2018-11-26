@@ -136,12 +136,6 @@ namespace PdfSharp.Drawing
         { }
 #endif
 
-#if GDI
-        XColor(KnownColor knownColor)
-            : this(System.Drawing.Color.FromKnownColor(knownColor))
-        { }
-#endif
-
 #if UWP
         XColor(UwpColor color)
             : this(color.A, color.R, color.G, color.B)
@@ -301,36 +295,6 @@ namespace PdfSharp.Drawing
         public static XColor FromKnownColor(XKnownColor color)
         {
             return new XColor(color);
-        }
-
-#if GDI
-        /// <summary>
-        /// Creates an XColor from the specified pre-defined color.
-        /// </summary>
-        public static XColor FromKnownColor(KnownColor color)
-        {
-            return new XColor(color);
-        }
-#endif
-
-        /// <summary>
-        /// Creates an XColor from the specified name of a pre-defined color.
-        /// </summary>
-        public static XColor FromName(string name)
-        {
-#if GDI
-            // The implementation in System.Drawing.dll is interesting. It uses a ColorConverter
-            // with hash tables, locking mechanisms etc. I'm not sure what problems that solves.
-            // So I don't use the source, but the reflection.
-            try
-            {
-                return new XColor((KnownColor)Enum.Parse(typeof(KnownColor), name, true));
-            }
-            // ReSharper disable EmptyGeneralCatchClause
-            catch { }
-            // ReSharper restore EmptyGeneralCatchClause
-#endif
-            return Empty;
         }
 
         /// <summary>
