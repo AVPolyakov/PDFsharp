@@ -33,7 +33,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using PdfSharp.Fonts;
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using GdiFontFamily = System.Drawing.FontFamily;

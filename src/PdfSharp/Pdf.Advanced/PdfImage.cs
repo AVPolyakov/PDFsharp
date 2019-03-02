@@ -30,8 +30,10 @@
 
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
-#if CORE
+using System.Linq;
+#if CORE && !WITHOUT_DRAWING
 using System.Drawing.Imaging;
 #endif
 #if GDI
@@ -314,7 +316,7 @@ namespace PdfSharp.Pdf.Advanced
 #if CORE_WITH_GDI
                         // No stream, no filename, get image data.
                         // Save the image to a memory stream.
-                        _image._gdiImage.Save(memory, ImageFormat.Jpeg);
+                        _image._gdiImage.SaveToJpeg(memory);
 #endif
                     }
                 }
@@ -411,24 +413,10 @@ namespace PdfSharp.Pdf.Advanced
                 }
             }
 #endif
-#if CORE_WITH_GDI
+#if CORE_WITH_GDI || WITHOUT_DRAWING
             if (_image._importedImage == null)
             {
-                if ((_image._gdiImage.Flags & ((int)ImageFlags.ColorSpaceCmyk | (int)ImageFlags.ColorSpaceYcck)) != 0)
-                {
-                    // TODO: Test with CMYK JPEG files (so far I only found ImageFlags.ColorSpaceYcck JPEG files ...)
-                    Elements[Keys.ColorSpace] = new PdfName("/DeviceCMYK");
-                    if ((_image._gdiImage.Flags & (int)ImageFlags.ColorSpaceYcck) != 0)
-                        Elements["/Decode"] = new PdfLiteral("[1 0 1 0 1 0 1 0]"); // Invert colors? Why??
-                }
-                else if ((_image._gdiImage.Flags & (int)ImageFlags.ColorSpaceGray) != 0)
-                {
-                    Elements[Keys.ColorSpace] = new PdfName("/DeviceGray");
-                }
-                else
-                {
-                    Elements[Keys.ColorSpace] = new PdfName("/DeviceRGB");
-                }
+                _image._gdiImage.AddPdfElements(Elements);
             }
 #endif
 #if GDI
@@ -510,40 +498,16 @@ namespace PdfSharp.Pdf.Advanced
             }
 #endif
 
-#if (CORE_WITH_GDI || GDI) && !WPF
-            switch (_image._gdiImage.PixelFormat)
-            {
-                case PixelFormat.Format24bppRgb:
-                    ReadTrueColorMemoryBitmap(3, 8, false);
-                    break;
-
-                case PixelFormat.Format32bppRgb:
-                    ReadTrueColorMemoryBitmap(4, 8, false);
-                    break;
-
-                case PixelFormat.Format32bppArgb:
-                case PixelFormat.Format32bppPArgb:
-                    ReadTrueColorMemoryBitmap(3, 8, true);
-                    break;
-
-                case PixelFormat.Format8bppIndexed:
-                    ReadIndexedMemoryBitmap(8);
-                    break;
-
-                case PixelFormat.Format4bppIndexed:
-                    ReadIndexedMemoryBitmap(4);
-                    break;
-
-                case PixelFormat.Format1bppIndexed:
-                    ReadIndexedMemoryBitmap(1);
-                    break;
-
-                default:
-#if DEBUGxxx
-          image.image.Save("$$$.bmp", ImageFormat.Bmp);
-#endif
-                    throw new NotImplementedException("Image format not supported.");
-            }
+#if (CORE_WITH_GDI || WITHOUT_DRAWING || GDI) && !WPF
+            _image._gdiImage.GetBitmapReader().Match(
+                trueColor => {
+                    ReadTrueColorMemoryBitmap(trueColor);
+                    return new { };
+                },
+                indexed => {
+                    ReadIndexedMemoryBitmap(indexed);
+                    return new { };
+                });
 #endif
 #if WPF // && !GDI
 #if !SILVERLIGHT
@@ -825,18 +789,18 @@ namespace PdfSharp.Pdf.Advanced
         /// <summary>
         /// Reads images that are returned from GDI+ without color palette.
         /// </summary>
-        /// <param name="components">4 (32bpp RGB), 3 (24bpp RGB, 32bpp ARGB)</param>
-        /// <param name="bits">8</param>
-        /// <param name="hasAlpha">true (ARGB), false (RGB)</param>
-        private void ReadTrueColorMemoryBitmap(int components, int bits, bool hasAlpha)
+        private void ReadTrueColorMemoryBitmap(BitmapReader.TrueColor @params)
         {
+            var components = @params.Components;
+            var bits = @params.Bits;
+            var hasAlpha = @params.HasAlpha;
 #if DEBUG_
             image.image.Save("$$$.bmp", ImageFormat.Bmp);
 #endif
             int pdfVersion = Owner.Version;
             MemoryStream memory = new MemoryStream();
-#if CORE_WITH_GDI
-            _image._gdiImage.Save(memory, ImageFormat.Bmp);
+#if CORE_WITH_GDI || WITHOUT_DRAWING
+            _image._gdiImage.SaveToBmp(memory);
 #endif
 #if GDI
             _image._gdiImage.Save(memory, ImageFormat.Bmp);
@@ -884,7 +848,7 @@ namespace PdfSharp.Pdf.Advanced
 
                 if (ReadWord(imageBits, 0) != 0x4d42 || // "BM"
                     ReadDWord(imageBits, 2) != streamLength ||
-                    ReadDWord(imageBits, 14) != 40 || // sizeof BITMAPINFOHEADER
+                    !new[] {40, 108}.Contains(ReadDWord(imageBits, 14)) || // sizeof BITMAPINFOHEADER
                     ReadDWord(imageBits, 18) != width ||
                     ReadDWord(imageBits, 22) != height)
                 {
@@ -893,7 +857,7 @@ namespace PdfSharp.Pdf.Advanced
                 if (ReadWord(imageBits, 26) != 1 ||
                   (!hasAlpha && ReadWord(imageBits, 28) != components * bits ||
                    hasAlpha && ReadWord(imageBits, 28) != (components + 1) * bits) ||
-                  ReadDWord(imageBits, 30) != 0)
+                  !new[]{0, 3}.Contains(ReadDWord(imageBits, 30)))
                 {
                     throw new NotImplementedException("ReadTrueColorMemoryBitmap: unsupported format #2");
                 }
@@ -1026,15 +990,16 @@ namespace PdfSharp.Pdf.Advanced
             } BITMAPINFOHEADER, *PBITMAPINFOHEADER; 
         */
 
-        private void ReadIndexedMemoryBitmap(int bits)
+        private void ReadIndexedMemoryBitmap(BitmapReader.Indexed @params)
         {
+            var bits = @params.Bits;
             int pdfVersion = Owner.Version;
             int firstMaskColor = -1, lastMaskColor = -1;
             bool segmentedColorMask = false;
 
             MemoryStream memory = new MemoryStream();
 #if CORE_WITH_GDI
-            _image._gdiImage.Save(memory, ImageFormat.Bmp);
+            _image._gdiImage.SaveToBmp(memory);
 #endif
 #if GDI
             _image._gdiImage.Save(memory, ImageFormat.Bmp);

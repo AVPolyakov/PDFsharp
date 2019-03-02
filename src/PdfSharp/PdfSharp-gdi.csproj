@@ -5,11 +5,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>DEBUG;TRACE;GDI;UseGdiObjects</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;CORE;WITHOUT_DRAWING</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;GDI;UseGdiObjects</DefineConstants>
+    <DefineConstants>TRACE;CORE;WITHOUT_DRAWING</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -23,11 +23,12 @@
     <EmbeddedResource Remove="Windows\**" />
     <None Remove="Windows\**" />
     <Compile Remove="Drawing.BarCodes\DataMatrixImage.opensource.cs" />
+    <Compile Remove="Drawing\XBitmapEncoder.cs" />
+    <Compile Remove="Drawing\XBitmapImage.cs" />
+    <Compile Remove="Drawing\XBitmapSource.cs" />
+    <Compile Remove="Fonts\PlatformFontResolver.cs" />
+    <Compile Remove="Fonts\PlatformFontResolverInfo.cs" />
     <Compile Remove="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
   </ItemGroup>
 
 </Project>

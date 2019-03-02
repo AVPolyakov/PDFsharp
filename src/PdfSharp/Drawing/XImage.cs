@@ -199,11 +199,11 @@ namespace PdfSharp.Drawing
             //Bits = new byte[BitsLength];
             //file.Read(Bits, 0, BitsLength);
             //file.Close();
-#if CORE_WITH_GDI || GDI
+#if CORE_WITH_GDI || GDI || WITHOUT_DRAWING
             try
             {
                 Lock.EnterGdiPlus();
-                _gdiImage = Image.FromFile(path);
+                _gdiImage = ImageSettings.ImageFactory.FromFile(path);
             }
             finally { Lock.ExitGdiPlus(); }
 #endif
@@ -241,12 +241,12 @@ namespace PdfSharp.Drawing
 
             // TODO: Create a fingerprint of the bytes in the stream to identify identical images.
             // TODO: Merge code for CORE_WITH_GDI and GDI.
-#if CORE_WITH_GDI
+#if CORE_WITH_GDI || WITHOUT_DRAWING
             // Create a GDI+ image.
             try
             {
                 Lock.EnterGdiPlus();
-                _gdiImage = Image.FromStream(stream);
+                _gdiImage = ImageSettings.ImageFactory.FromStream(stream);
             }
             finally { Lock.ExitGdiPlus(); }
 #endif
@@ -361,7 +361,7 @@ namespace PdfSharp.Drawing
         }
 
 #if DEBUG
-#if CORE || GDI || WPF
+#if CORE && !WITHOUT_DRAWING || GDI || WPF
         /// <summary>
         /// Creates an image from the specified file.
         /// </summary>
@@ -416,7 +416,7 @@ namespace PdfSharp.Drawing
 #endif
 
 #if DEBUG
-#if CORE || GDI || WPF
+#if CORE && !WITHOUT_DRAWING || GDI || WPF
         /// <summary>
         /// Creates an image.
         /// </summary>
@@ -472,55 +472,10 @@ namespace PdfSharp.Drawing
                 return;
             }
 #endif
-
-#if CORE_WITH_GDI
+#if CORE_WITH_GDI || WITHOUT_DRAWING
             if (_gdiImage != null)
             {
-                // ImageFormat has no overridden Equals function.
-                string guid;
-                try
-                {
-                    Lock.EnterGdiPlus();
-                    guid = _gdiImage.RawFormat.Guid.ToString("B").ToUpper();
-                }
-                finally
-                {
-                    Lock.ExitGdiPlus();
-                }
-
-                switch (guid)
-                {
-                    case "{B96B3CAA-0728-11D3-9D7B-0000F81EF32E}":  // memoryBMP
-                    case "{B96B3CAB-0728-11D3-9D7B-0000F81EF32E}":  // bmp
-                    case "{B96B3CAF-0728-11D3-9D7B-0000F81EF32E}":  // png
-                        _format = XImageFormat.Png;
-                        break;
-
-                    case "{B96B3CAE-0728-11D3-9D7B-0000F81EF32E}":  // jpeg
-                        _format = XImageFormat.Jpeg;
-                        break;
-
-                    case "{B96B3CB0-0728-11D3-9D7B-0000F81EF32E}":  // gif
-                        _format = XImageFormat.Gif;
-                        break;
-
-                    case "{B96B3CB1-0728-11D3-9D7B-0000F81EF32E}":  // tiff
-                        _format = XImageFormat.Tiff;
-                        break;
-
-                    case "{B96B3CB5-0728-11D3-9D7B-0000F81EF32E}":  // icon
-                        _format = XImageFormat.Icon;
-                        break;
-
-                    case "{B96B3CAC-0728-11D3-9D7B-0000F81EF32E}":  // emf
-                    case "{B96B3CAD-0728-11D3-9D7B-0000F81EF32E}":  // wmf
-                    case "{B96B3CB2-0728-11D3-9D7B-0000F81EF32E}":  // exif
-                    case "{B96B3CB3-0728-11D3-9D7B-0000F81EF32E}":  // photoCD
-                    case "{B96B3CB4-0728-11D3-9D7B-0000F81EF32E}":  // flashPIX
-
-                    default:
-                        throw new InvalidOperationException("Unsupported image format.");
-                }
+                _format = _gdiImage.ImageFormat;
                 return;
             }
 #endif
@@ -904,7 +859,7 @@ namespace PdfSharp.Drawing
             }
 #endif
 
-#if CORE_WITH_GDI || GDI
+#if CORE_WITH_GDI || WITHOUT_DRAWING || GDI
             if (_gdiImage != null)
             {
                 try
@@ -937,7 +892,7 @@ namespace PdfSharp.Drawing
                 }
 #endif
 
-#if (CORE_WITH_GDI || GDI)  && !WPF
+#if (CORE_WITH_GDI || WITHOUT_DRAWING || GDI)  && !WPF
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -978,7 +933,7 @@ namespace PdfSharp.Drawing
                 }
 #endif
 
-#if (CORE_WITH_GDI || GDI) && !WPF && !WPF
+#if (CORE_WITH_GDI || WITHOUT_DRAWING || GDI) && !WPF && !WPF
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -1037,7 +992,7 @@ namespace PdfSharp.Drawing
                 }
 #endif
 
-#if (CORE_WITH_GDI || GDI) && !WPF
+#if (CORE_WITH_GDI || WITHOUT_DRAWING || GDI) && !WPF
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -1091,7 +1046,7 @@ namespace PdfSharp.Drawing
                 }
 #endif
 
-#if (CORE_WITH_GDI || GDI) && !WPF
+#if (CORE_WITH_GDI || WITHOUT_DRAWING || GDI) && !WPF
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -1135,7 +1090,7 @@ namespace PdfSharp.Drawing
                     return (int)_importedImage.Information.Width;
 #endif
 
-#if CORE_WITH_GDI
+#if CORE_WITH_GDI || WITHOUT_DRAWING
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -1181,7 +1136,7 @@ namespace PdfSharp.Drawing
                     return (int)_importedImage.Information.Height;
 #endif
 
-#if CORE_WITH_GDI
+#if CORE_WITH_GDI || WITHOUT_DRAWING
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -1241,7 +1196,7 @@ namespace PdfSharp.Drawing
                 }
 #endif
 
-#if (CORE_WITH_GDI || GDI) && !WPF
+#if (CORE_WITH_GDI || WITHOUT_DRAWING || GDI) && !WPF
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -1290,7 +1245,7 @@ namespace PdfSharp.Drawing
                 }
 #endif
 
-#if (CORE_WITH_GDI || GDI) && !WPF
+#if (CORE_WITH_GDI || WITHOUT_DRAWING || GDI) && !WPF
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -1528,8 +1483,8 @@ namespace PdfSharp.Drawing
         internal ImportedImage _importedImage;
 #endif
 
-#if CORE_WITH_GDI || GDI
-        internal Image _gdiImage;
+#if CORE_WITH_GDI || WITHOUT_DRAWING || GDI
+        internal IImage _gdiImage;
 #endif
 #if WPF
         internal BitmapSource _wpfImage;
@@ -1557,4 +1512,208 @@ namespace PdfSharp.Drawing
         /// </summary>
         internal PdfImageTable.ImageSelector _selector;
     }
+
+    /// <summary>
+    /// </summary>
+    public static class ImageSettings
+    {
+        /// <summary>
+        /// </summary>
+        public static IImageFactory ImageFactory;
+    }
+
+#pragma warning disable 1591
+    public interface IImageFactory
+    {
+        IImage FromFile(string path);
+        IImage FromStream(Stream stream);
+    }
+
+    public interface IImage: IDisposable
+    {
+        XImageFormat ImageFormat { get; }
+        int Width { get; }
+        int Height { get; }
+        double HorizontalResolution { get; }
+        double VerticalResolution { get; }
+        void AddPdfElements(PdfDictionary.DictionaryElements elements);
+        BitmapReader GetBitmapReader();
+        void SaveToBmp(MemoryStream memory);
+    }
+
+#if CORE_WITH_GDI || GDI
+    public class GdiImage : IImage
+    {
+        private readonly Image _gdiImage;
+
+        public GdiImage(Image gdiImage)
+        {
+            _gdiImage = gdiImage;
+        }
+
+        public void Dispose() => _gdiImage.Dispose();
+
+        public XImageFormat ImageFormat
+        {
+            get
+            {
+                // ImageFormat has no overridden Equals function.
+                string guid;
+                try
+                {
+                    Lock.EnterGdiPlus();
+                    guid = _gdiImage.RawFormat.Guid.ToString("B").ToUpper();
+                }
+                finally
+                {
+                    Lock.ExitGdiPlus();
+                }
+
+                XImageFormat format;
+                switch (guid)
+                {
+                    case "{B96B3CAA-0728-11D3-9D7B-0000F81EF32E}":  // memoryBMP
+                    case "{B96B3CAB-0728-11D3-9D7B-0000F81EF32E}":  // bmp
+                    case "{B96B3CAF-0728-11D3-9D7B-0000F81EF32E}":  // png
+                        format = XImageFormat.Png;
+                        break;
+
+                    case "{B96B3CAE-0728-11D3-9D7B-0000F81EF32E}":  // jpeg
+                        format = XImageFormat.Jpeg;
+                        break;
+
+                    case "{B96B3CB0-0728-11D3-9D7B-0000F81EF32E}":  // gif
+                        format = XImageFormat.Gif;
+                        break;
+
+                    case "{B96B3CB1-0728-11D3-9D7B-0000F81EF32E}":  // tiff
+                        format = XImageFormat.Tiff;
+                        break;
+
+                    case "{B96B3CB5-0728-11D3-9D7B-0000F81EF32E}":  // icon
+                        format = XImageFormat.Icon;
+                        break;
+
+                    case "{B96B3CAC-0728-11D3-9D7B-0000F81EF32E}":  // emf
+                    case "{B96B3CAD-0728-11D3-9D7B-0000F81EF32E}":  // wmf
+                    case "{B96B3CB2-0728-11D3-9D7B-0000F81EF32E}":  // exif
+                    case "{B96B3CB3-0728-11D3-9D7B-0000F81EF32E}":  // photoCD
+                    case "{B96B3CB4-0728-11D3-9D7B-0000F81EF32E}":  // flashPIX
+
+                    default:
+                        throw new InvalidOperationException("Unsupported image format.");
+                }
+                return format;
+            }
+        }
+
+        public int Width => _gdiImage.Width;
+        public int Height => _gdiImage.Height;
+        public double HorizontalResolution => _gdiImage.HorizontalResolution;
+        public double VerticalResolution => _gdiImage.VerticalResolution;
+
+        public void AddPdfElements(PdfDictionary.DictionaryElements elements)
+        {
+            if ((_gdiImage.Flags & ((int)ImageFlags.ColorSpaceCmyk | (int)ImageFlags.ColorSpaceYcck)) != 0)
+            {
+                // TODO: Test with CMYK JPEG files (so far I only found ImageFlags.ColorSpaceYcck JPEG files ...)
+                elements[PdfImage.Keys.ColorSpace] = new PdfName("/DeviceCMYK");
+                if ((_gdiImage.Flags & (int)ImageFlags.ColorSpaceYcck) != 0)
+                    elements["/Decode"] = new PdfLiteral("[1 0 1 0 1 0 1 0]"); // Invert colors? Why??
+            }
+            else if ((_gdiImage.Flags & (int)ImageFlags.ColorSpaceGray) != 0)
+            {
+                elements[PdfImage.Keys.ColorSpace] = new PdfName("/DeviceGray");
+            }
+            else
+            {
+                elements[PdfImage.Keys.ColorSpace] = new PdfName("/DeviceRGB");
+            }
+        }
+
+        public void SaveToJpeg(MemoryStream memory)
+        {
+            _gdiImage.Save(memory, System.Drawing.Imaging.ImageFormat.Jpeg);
+        }
+
+
+        public BitmapReader GetBitmapReader()
+        {
+            BitmapReader bitmapReader;
+            switch (_gdiImage.PixelFormat)
+            {
+                case PixelFormat.Format24bppRgb:
+                    bitmapReader = new BitmapReader.TrueColor(3, 8, false);
+                    break;
+
+                case PixelFormat.Format32bppRgb:
+                    bitmapReader = new BitmapReader.TrueColor(4, 8, false);
+                    break;
+
+                case PixelFormat.Format32bppArgb:
+                case PixelFormat.Format32bppPArgb:
+                    bitmapReader = new BitmapReader.TrueColor(3, 8, true);
+                    break;
+
+                case PixelFormat.Format8bppIndexed:
+                    bitmapReader = new BitmapReader.Indexed(8);
+                    break;
+
+                case PixelFormat.Format4bppIndexed:
+                    bitmapReader = new BitmapReader.Indexed(4);
+                    break;
+
+                case PixelFormat.Format1bppIndexed:
+                    bitmapReader = new BitmapReader.Indexed(1);
+                    break;
+
+                default:
+#if DEBUGxxx
+          image.image.Save("$$$.bmp", ImageFormat.Bmp);
+#endif
+                    throw new NotImplementedException("Image format not supported.");
+            }
+            return bitmapReader;
+        }
+
+        public void SaveToBmp(MemoryStream memory)
+        {
+            _gdiImage.Save(memory, System.Drawing.Imaging.ImageFormat.Bmp);
+        }
+    }
+#endif
+
+    public abstract class BitmapReader
+    {
+        public abstract T Match<T>(Func<TrueColor, T> trueColor, Func<Indexed, T> indexed);
+
+        public class TrueColor: BitmapReader
+        {
+            public int Components { get; }
+            public int Bits { get; }
+            public bool HasAlpha { get; }
+
+            public TrueColor(int components, int bits, bool hasAlpha)
+            {
+                Components = components;
+                Bits = bits;
+                HasAlpha = hasAlpha;
+            }
+
+            public override T Match<T>(Func<TrueColor, T> trueColor, Func<Indexed, T> indexed) => trueColor(this);
+        }
+
+        public class Indexed: BitmapReader
+        {
+            public int Bits { get; }
+
+            public Indexed(int bits)
+            {
+                Bits = bits;
+            }
+
+            public override T Match<T>(Func<TrueColor, T> trueColor, Func<Indexed, T> indexed) => indexed(this);
+        }
+    }
+#pragma warning restore 1591
 }
