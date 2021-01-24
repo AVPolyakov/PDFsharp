@@ -30,7 +30,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using PdfSharp.Internal;
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
 using System.Drawing;
 using GdiFontFamily = System.Drawing.FontFamily;
 #endif
@@ -60,10 +60,14 @@ namespace PdfSharp.Drawing
         //    is not possible to use two different fonts that have the same
         //    family name.
 
-        FontFamilyInternal(string familyName, bool createPlatformObjects)
+        FontFamilyInternal(string familyName
+#if !WITHOUT_DRAWING
+            , bool createPlatformObjects
+#endif
+            )
         {
             _sourceName = _name = familyName;
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
             if (createPlatformObjects)
             {
                 _gdiFontFamily = new GdiFontFamily(familyName);
@@ -83,7 +87,7 @@ namespace PdfSharp.Drawing
 #endif
         }
 
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
         FontFamilyInternal(GdiFontFamily gdiFontFamily)
         {
             _sourceName = _name = gdiFontFamily.Name;
@@ -113,15 +117,24 @@ namespace PdfSharp.Drawing
         }
 #endif
 
-        internal static FontFamilyInternal GetOrCreateFromName(string familyName, bool createPlatformObject)
+        internal static FontFamilyInternal GetOrCreateFromName(string familyName
+#if !WITHOUT_DRAWING
+            , bool createPlatformObject
+#endif
+            )
         {
             try
             {
                 Lock.EnterFontFactory();
                 FontFamilyInternal family = FontFamilyCache.GetFamilyByName(familyName);
+
                 if (family == null)
                 {
-                    family = new FontFamilyInternal(familyName, createPlatformObject);
+                    family = new FontFamilyInternal(familyName
+#if !WITHOUT_DRAWING
+                        , createPlatformObject
+#endif
+                        );
                     family = FontFamilyCache.CacheOrGetFontFamily(family);
                 }
                 return family;
@@ -129,7 +142,7 @@ namespace PdfSharp.Drawing
             finally { Lock.ExitFontFactory(); }
         }
 
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
         internal static FontFamilyInternal GetOrCreateFromGdi(GdiFontFamily gdiFontFamily)
         {
             try
@@ -171,7 +184,7 @@ namespace PdfSharp.Drawing
         }
         readonly string _name;
 
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
         /// <summary>
         /// Gets the underlying GDI+ font family object.
         /// Is null if the font was created by a font resolver.

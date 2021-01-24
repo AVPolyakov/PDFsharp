@@ -30,8 +30,10 @@
 
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
-#if CORE
+using System.Linq;
+#if CORE && !WITHOUT_DRAWING
 using System.Drawing.Imaging;
 #endif
 #if GDI
@@ -411,9 +413,10 @@ namespace PdfSharp.Pdf.Advanced
                 }
             }
 #endif
-#if CORE_WITH_GDI
+#if CORE_WITH_GDI || WITHOUT_DRAWING
             if (_image._importedImage == null)
             {
+#if !WITHOUT_DRAWING
                 if ((_image._gdiImage.Flags & ((int)ImageFlags.ColorSpaceCmyk | (int)ImageFlags.ColorSpaceYcck)) != 0)
                 {
                     // TODO: Test with CMYK JPEG files (so far I only found ImageFlags.ColorSpaceYcck JPEG files ...)
@@ -429,6 +432,10 @@ namespace PdfSharp.Pdf.Advanced
                 {
                     Elements[Keys.ColorSpace] = new PdfName("/DeviceRGB");
                 }
+#endif
+#if WITHOUT_DRAWING                
+                Elements[Keys.ColorSpace] = new PdfName("/DeviceRGB");
+#endif                
             }
 #endif
 #if GDI
@@ -544,6 +551,9 @@ namespace PdfSharp.Pdf.Advanced
 #endif
                     throw new NotImplementedException("Image format not supported.");
             }
+#endif
+#if WITHOUT_DRAWING
+            ReadTrueColorMemoryBitmap(3, 8, false);
 #endif
 #if WPF // && !GDI
 #if !SILVERLIGHT
@@ -837,6 +847,9 @@ namespace PdfSharp.Pdf.Advanced
             MemoryStream memory = new MemoryStream();
 #if CORE_WITH_GDI
             _image._gdiImage.Save(memory, ImageFormat.Bmp);
+#endif
+#if WITHOUT_DRAWING
+            _image._gdiImage.SaveToBmp(memory);
 #endif
 #if GDI
             _image._gdiImage.Save(memory, ImageFormat.Bmp);

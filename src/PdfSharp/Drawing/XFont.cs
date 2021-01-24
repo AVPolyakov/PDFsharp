@@ -33,7 +33,7 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.ComponentModel;
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using GdiFontFamily = System.Drawing.FontFamily;
@@ -117,7 +117,7 @@ namespace PdfSharp.Drawing
             Initialize();
         }
 
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
         /// <summary>
         /// Initializes a new instance of the <see cref="XFont"/> class from a System.Drawing.FontFamily.
         /// </summary>
@@ -378,7 +378,7 @@ namespace PdfSharp.Drawing
             CreateDescriptorAndInitializeFontMetrics();
         }
 
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
         /// <summary>
         /// A GDI+ font object is used to setup the internal font objects.
         /// </summary>
@@ -780,7 +780,7 @@ namespace PdfSharp.Drawing
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
         /// <summary>
         /// Gets the GDI family.
         /// </summary>

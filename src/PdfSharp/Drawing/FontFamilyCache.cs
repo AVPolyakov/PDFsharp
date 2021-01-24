@@ -33,7 +33,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
 using System.Drawing;
 using GdiFontFamily = System.Drawing.FontFamily;
 #endif

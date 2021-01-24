@@ -733,6 +733,7 @@ namespace PdfSharp.Drawing  // #??? Clean up
             return new XGraphics(form);
         }
 
+#if !WITHOUT_DRAWING
         /// <summary>
         /// Creates a new instance of the XGraphics class from a PdfSharp.Drawing.XForm object.
         /// </summary>
@@ -771,6 +772,7 @@ namespace PdfSharp.Drawing  // #??? Clean up
             }
             return null;
         }
+#endif
 
         /// <summary>
         /// Internal setup.

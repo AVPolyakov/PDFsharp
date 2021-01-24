@@ -31,7 +31,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using GdiFontFamily = System.Drawing.FontFamily;
@@ -112,7 +112,7 @@ namespace PdfSharp.Drawing
             return size;
         }
 
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
         public static GdiFont CreateFont(string familyName, double emSize, GdiFontStyle style, out XFontSource fontSource)
         {
             fontSource = null;

@@ -28,7 +28,7 @@
 #endregion
 
 using System;
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
 using System.Drawing;
 using GdiFont = System.Drawing.Font;
 using GdiFontFamily = System.Drawing.FontFamily;
@@ -50,6 +50,7 @@ namespace PdfSharp.Drawing
     /// </summary>
     public sealed class XFontFamily
     {
+#if !WITHOUT_DRAWING
         /// <summary>
         /// Initializes a new instance of the <see cref="XFontFamily"/> class.
         /// </summary>
@@ -63,6 +64,7 @@ namespace PdfSharp.Drawing
         {
             FamilyInternal = FontFamilyInternal.GetOrCreateFromName(familyName, createPlatformObjects);
         }
+#endif
 
         /// <summary>
         /// Initializes a new instance of the <see cref="XFontFamily"/> class from FontFamilyInternal.
@@ -91,6 +93,7 @@ namespace PdfSharp.Drawing
         //}
 #endif
 
+#if !WITHOUT_DRAWING
         internal static XFontFamily CreateFromName_not_used(string name, bool createPlatformFamily)
         {
             XFontFamily fontFamily = new XFontFamily(name);
@@ -105,6 +108,7 @@ namespace PdfSharp.Drawing
             }
             return fontFamily;
         }
+#endif
 
         /// <summary>
         /// An XGlyphTypeface for a font source that comes from a custom font resolver
@@ -116,7 +120,11 @@ namespace PdfSharp.Drawing
             FontFamilyInternal fontFamilyInternal = FontFamilyCache.GetFamilyByName(name);
             if (fontFamilyInternal == null)
             {
-                fontFamilyInternal = FontFamilyInternal.GetOrCreateFromName(name, false);
+                fontFamilyInternal = FontFamilyInternal.GetOrCreateFromName(name
+#if !WITHOUT_DRAWING
+                    , false
+#endif
+                    );
                 fontFamilyInternal = FontFamilyCache.CacheOrGetFontFamily(fontFamilyInternal);
             }
 
@@ -124,7 +132,7 @@ namespace PdfSharp.Drawing
             return new XFontFamily(fontFamilyInternal);
         }
 
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
         internal static XFontFamily GetOrCreateFromGdi(GdiFont font)
         {
             FontFamilyInternal fontFamilyInternal = FontFamilyInternal.GetOrCreateFromGdi(font.FontFamily);

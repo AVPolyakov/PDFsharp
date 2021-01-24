@@ -31,7 +31,7 @@ using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Text;
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
 using System.Drawing;
 using GdiFontFamily = System.Drawing.FontFamily;
 using GdiFont = System.Drawing.Font;
@@ -94,7 +94,11 @@ namespace PdfSharp.Fonts
                     fontResolverInfo = customFontResolver.ResolveTypeface(familyName, fontResolvingOptions.IsBold, fontResolvingOptions.IsItalic);
 
                     // If resolved by custom font resolver register info and font source.
-                    if (fontResolverInfo != null && !(fontResolverInfo is PlatformFontResolverInfo))
+                    if (fontResolverInfo != null
+#if !WITHOUT_DRAWING
+                        && !(fontResolverInfo is PlatformFontResolverInfo)
+#endif
+                        )
                     {
                         // OverrideStyleSimulations is true only for internal quality tests.
                         if (fontResolvingOptions.OverrideStyleSimulations)
@@ -146,6 +150,7 @@ namespace PdfSharp.Fonts
                         }
                     }
                 }
+#if !WITHOUT_DRAWING
                 else
                 {
                     // Case: There was no custom font resolver set.
@@ -154,6 +159,7 @@ namespace PdfSharp.Fonts
                     // automatically by PlatformFontResolver.ResolveTypeface.
                     fontResolverInfo = PlatformFontResolver.ResolveTypeface(familyName, fontResolvingOptions, typefaceKey);
                 }
+#endif
 
                 // Return value is null if the typeface could not be resolved.
                 // In this case PDFsharp stops.
