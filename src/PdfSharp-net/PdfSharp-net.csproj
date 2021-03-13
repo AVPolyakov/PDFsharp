@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>PdfSharp</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE;CORE;CORE_WITH_GDI</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;CORE;CORE_WITH_GDI</DefineConstants>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <Compile Include="..\PdfSharp\**\*.cs" />
+    <Compile Remove="..\PdfSharp\Forms\**" />
+    <Compile Remove="..\PdfSharp\Windows\**" />
+    <Compile Remove="..\PdfSharp\Drawing.BarCodes\DataMatrixImage.opensource.cs" />
+    <Compile Remove="..\PdfSharp\Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="..\PdfSharp\**\*.restext" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
+  </ItemGroup>
+  
+</Project>
