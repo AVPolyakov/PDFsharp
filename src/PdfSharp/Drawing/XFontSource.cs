@@ -33,7 +33,7 @@ using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using PdfSharp.Fonts;
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
 using GdiFont = System.Drawing.Font;
 using GdiFontStyle = System.Drawing.FontStyle;
 #endif
@@ -90,7 +90,7 @@ namespace PdfSharp.Drawing
             return fontSource;
         }
 
-#if CORE || GDI
+#if CORE && !WITHOUT_DRAWING || GDI
         internal static XFontSource GetOrCreateFromGdi(string typefaceKey, GdiFont gdiFont)
         {
             byte[] bytes = ReadFontBytesFromGdi(gdiFont);

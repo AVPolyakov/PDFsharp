@@ -207,6 +207,9 @@ namespace PdfSharp.Drawing
             }
             finally { Lock.ExitGdiPlus(); }
 #endif
+#if WITHOUT_DRAWING
+            _gdiImage = ImageHandler.FromFile(path);
+#endif
 #if WPF && !SILVERLIGHT
             //BitmapSource.Create()
             // BUG: BitmapImage locks the file
@@ -249,6 +252,9 @@ namespace PdfSharp.Drawing
                 _gdiImage = Image.FromStream(stream);
             }
             finally { Lock.ExitGdiPlus(); }
+#endif
+#if WITHOUT_DRAWING
+            _gdiImage = ImageHandler.FromStream(stream);
 #endif
 #if GDI
             // Create a GDI+ image.
@@ -361,7 +367,7 @@ namespace PdfSharp.Drawing
         }
 
 #if DEBUG
-#if CORE || GDI || WPF
+#if CORE && !WITHOUT_DRAWING || GDI || WPF
         /// <summary>
         /// Creates an image from the specified file.
         /// </summary>
@@ -416,7 +422,7 @@ namespace PdfSharp.Drawing
 #endif
 
 #if DEBUG
-#if CORE || GDI || WPF
+#if CORE && !WITHOUT_DRAWING || GDI || WPF
         /// <summary>
         /// Creates an image.
         /// </summary>
@@ -472,10 +478,10 @@ namespace PdfSharp.Drawing
                 return;
             }
 #endif
-
-#if CORE_WITH_GDI
+#if CORE_WITH_GDI || WITHOUT_DRAWING
             if (_gdiImage != null)
             {
+#if !WITHOUT_DRAWING                
                 // ImageFormat has no overridden Equals function.
                 string guid;
                 try
@@ -521,6 +527,10 @@ namespace PdfSharp.Drawing
                     default:
                         throw new InvalidOperationException("Unsupported image format.");
                 }
+#endif
+#if WITHOUT_DRAWING
+                _format = _gdiImage.ImageFormat;
+#endif
                 return;
             }
 #endif
@@ -904,7 +914,7 @@ namespace PdfSharp.Drawing
             }
 #endif
 
-#if CORE_WITH_GDI || GDI
+#if CORE_WITH_GDI || WITHOUT_DRAWING || GDI
             if (_gdiImage != null)
             {
                 try
@@ -937,7 +947,7 @@ namespace PdfSharp.Drawing
                 }
 #endif
 
-#if (CORE_WITH_GDI || GDI)  && !WPF
+#if (CORE_WITH_GDI || WITHOUT_DRAWING || GDI)  && !WPF
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -978,7 +988,7 @@ namespace PdfSharp.Drawing
                 }
 #endif
 
-#if (CORE_WITH_GDI || GDI) && !WPF && !WPF
+#if (CORE_WITH_GDI || WITHOUT_DRAWING || GDI) && !WPF && !WPF
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -1037,7 +1047,7 @@ namespace PdfSharp.Drawing
                 }
 #endif
 
-#if (CORE_WITH_GDI || GDI) && !WPF
+#if (CORE_WITH_GDI || WITHOUT_DRAWING || GDI) && !WPF
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -1091,7 +1101,7 @@ namespace PdfSharp.Drawing
                 }
 #endif
 
-#if (CORE_WITH_GDI || GDI) && !WPF
+#if (CORE_WITH_GDI || WITHOUT_DRAWING || GDI) && !WPF
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -1135,7 +1145,7 @@ namespace PdfSharp.Drawing
                     return (int)_importedImage.Information.Width;
 #endif
 
-#if CORE_WITH_GDI
+#if CORE_WITH_GDI || WITHOUT_DRAWING
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -1181,7 +1191,7 @@ namespace PdfSharp.Drawing
                     return (int)_importedImage.Information.Height;
 #endif
 
-#if CORE_WITH_GDI
+#if CORE_WITH_GDI || WITHOUT_DRAWING
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -1241,7 +1251,7 @@ namespace PdfSharp.Drawing
                 }
 #endif
 
-#if (CORE_WITH_GDI || GDI) && !WPF
+#if (CORE_WITH_GDI || WITHOUT_DRAWING || GDI) && !WPF
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -1290,7 +1300,7 @@ namespace PdfSharp.Drawing
                 }
 #endif
 
-#if (CORE_WITH_GDI || GDI) && !WPF
+#if (CORE_WITH_GDI || WITHOUT_DRAWING || GDI) && !WPF
                 try
                 {
                     Lock.EnterGdiPlus();
@@ -1530,6 +1540,9 @@ namespace PdfSharp.Drawing
 
 #if CORE_WITH_GDI || GDI
         internal Image _gdiImage;
+#endif
+#if WITHOUT_DRAWING
+        internal ImageHandler _gdiImage;
 #endif
 #if WPF
         internal BitmapSource _wpfImage;
